@@ -216,12 +216,27 @@ class telegram implements NotificationModuleInterface
 	 */
 	public function sendNotification(NotificationInterface $notification, $moduleSettings, $notificationSettings)
 	{
-		$message =$notification->getMessage().' '.$notification->getUrl();
-		file_get_contents('https://api.telegram.org/bot'.$moduleSettings['token'].'/sendMessage?chat_id='.$moduleSettings['chatid'].'&text='.$message.'');
-
-
-
+		$postData = [
+			'title' => $notification->getTitle(),
+			'message' => $notification->getMessage(),
+			'url' => $notification->getUrl(),
+			'attributes' => [],
+		];
+		foreach ($notification->getAttributes() as $attribute) {
+			$postData['attributes'][] = [
+				'label' => $attribute->getLabel(),
+				'value' => $attribute->getValue(),
+				'url' => $attribute->getUrl(),
+				'style' => $attribute->getStyle(),
+				'icon' => $attribute->getIcon(),
+			];
+		}
+		
+		$message ='WHMCS: '.$notification->getMessage().' '.$notification->getUrl()."\nClient: ".$postData['attributes'][1]['value'];
+		file_get_contents('https://api.telegram.org/bot'.$moduleSettings['token'].'/sendMessage?chat_id='.$moduleSettings['chatid'].'&text='.urlencode($message).'');
+		
+// 		file_get_contents('https://api.telegram.org/bot'.$moduleSettings['token'].'/sendMessage?chat_id='.$moduleSettings['chatid'].'&text='.urlencode($message2).'');
+// 		$message2 = json_encode($postData);
 		/** @var Template $email */
-
 	}
 }
