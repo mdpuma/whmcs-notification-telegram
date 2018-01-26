@@ -37,7 +37,7 @@ class telegram implements NotificationModuleInterface
 	public function __construct()
 	{
 		$this->setDisplayName('Telegram')
-		     ->setLogoFileName('telegram_logo.png');
+			 ->setLogoFileName('telegram_logo.png');
 	}
 
 	/**
@@ -65,16 +65,16 @@ class telegram implements NotificationModuleInterface
 	 *
 	 * EX.
 	 * return [
-	 *     'api_username' => [
-	 *         'FriendlyName' => 'API Username',
-	 *         'Type' => 'text',
-	 *         'Description' => 'Required username to authenticate with message service',
-	 *     ],
-	 *     'api_password' => [
-	 *         'FriendlyName' => 'API Password',
-	 *         'Type' => 'password',
-	 *         'Description' => 'Required password to authenticate with message service',
-	 *     ],
+	 *	 'api_username' => [
+	 *		 'FriendlyName' => 'API Username',
+	 *		 'Type' => 'text',
+	 *		 'Description' => 'Required username to authenticate with message service',
+	 *	 ],
+	 *	 'api_password' => [
+	 *		 'FriendlyName' => 'API Password',
+	 *		 'Type' => 'password',
+	 *		 'Description' => 'Required password to authenticate with message service',
+	 *	 ],
 	 * ];
 	 *
 	 * @return array
@@ -85,14 +85,8 @@ class telegram implements NotificationModuleInterface
 			'token' => [
 				'FriendlyName' => 'Token',
 				'Type' => 'text',
-				'Description' => 'A obtenir auprès de <a href="https://telegram.me/BothFather">BotFather</a>',
+				'Description' => 'You should create telegram_bot via <a href="https://telegram.me/BothFather">BotFather</a>',
 				'Placeholder' => 'Token'
-			],
-			'chatid' => [
-				'FriendlyName' => 'Chat ID',
-				'Type' => 'text',
-				'Description' => 'ID du chat',
-				'Placeholder' => 'Chat ID',
 			],
 		];
 	}
@@ -123,11 +117,11 @@ class telegram implements NotificationModuleInterface
 	 *
 	 * EX.
 	 * ['channel' => [
-	 *     'FriendlyName' => 'Channel',
-	 *     'Type' => 'dynamic',
-	 *     'Description' => 'Select the desired channel for notification delivery.',
-	 *     'Required' => true,
-	 *     ],
+	 *	 'FriendlyName' => 'Channel',
+	 *	 'Type' => 'dynamic',
+	 *	 'Description' => 'Select the desired channel for notification delivery.',
+	 *	 'Required' => true,
+	 *	 ],
 	 * ]
 	 *
 	 * The "Type" of a setting can be text, textarea, yesno, system and dynamic
@@ -141,18 +135,18 @@ class telegram implements NotificationModuleInterface
 	 */
 	public function notificationSettings()
 	{
-		/*return [
-			'emailTemplate' => [
-				'FriendlyName' => 'Email Template',
+		return [
+			'chatid' => [
+				'FriendlyName' => 'Chat ID',
 				'Type' => 'dynamic',
-				'Description' => 'Choose the notification email template. You can create new email templates in <a href="configemailtemplates.php">Email Templates</a>',
+				'Description' => 'You may find chat id by opening following url: https://api.telegram.org/bot<TOKENID>/getUpdates?offset=-5',
 			],
-			'recipients' => [
-				'FriendlyName' => 'Recipients',
-				'Type' => 'text',
-				'Description' => 'Enter recipient email address(es) - separate entries with commas',
+			'debug' => [
+				'FriendlyName' => 'Debug',
+				'Type' => 'yesno',
+				'Description' => 'Debug notification with variable information',
 			],
-		];*/
+		];
 	}
 
 	/**
@@ -162,14 +156,14 @@ class telegram implements NotificationModuleInterface
 	 *
 	 * EX.
 	 * if ($fieldName == 'channel') {
-	 *     return [ 'values' => [
-	 *         ['id' => 1, 'name' => 'Tech Support', 'description' => 'Channel ID',],
-	 *         ['id' => 2, 'name' => 'Customer Service', 'description' => 'Channel ID',],
-	 *     ],];
+	 *	 return [ 'values' => [
+	 *		 ['id' => 1, 'name' => 'Tech Support', 'description' => 'Channel ID',],
+	 *		 ['id' => 2, 'name' => 'Customer Service', 'description' => 'Channel ID',],
+	 *	 ],];
 	 * } elseif ($fieldName == 'botname') {
-	 *     $restClient = $this->factoryHttpClient($settings);
-	 *     $operators = $restClient->get('/operators');
-	 *     return ['values' => $operators->toArray()];
+	 *	 $restClient = $this->factoryHttpClient($settings);
+	 *	 $operators = $restClient->get('/operators');
+	 *	 return ['values' => $operators->toArray()];
 	 * }
 	 *
 	 * For the Email notification module, a list of possible email templates is
@@ -182,11 +176,13 @@ class telegram implements NotificationModuleInterface
 	 */
 	public function getDynamicField($fieldName, $settings)
 	{
-		if ($fieldName == 'emailTemplate') {
-			$templates = Template::whereType('notification')->get();
+		if ($fieldName == 'chatid') {
+			// Open the file using the HTTP headers set above
+			$result = file_get_contents('https://api.telegram.org/bot'.$settings['token'].'/getUpdates?offset=-50');
+			$result = json_decode($result, true);
 			$values = [];
-			foreach ($templates as $template) {
-				$values[] = ['id' => $template->id, 'name' => $template->name, 'description' => 'Email Template ID',];
+			foreach ($result['result'] as $update) {
+				$values[] = ['id' => $update['message']['chat']['id'], 'name' => $update['message']['chat']['title'], 'description' => $update['message']['chat']['title']];
 			}
 			return [
 				'values' => $values,
@@ -232,11 +228,15 @@ class telegram implements NotificationModuleInterface
 			];
 		}
 		
-		$message ='WHMCS: '.$notification->getMessage().' '.$notification->getUrl()."\nClient: ".$postData['attributes'][1]['value'];
-		file_get_contents('https://api.telegram.org/bot'.$moduleSettings['token'].'/sendMessage?chat_id='.$moduleSettings['chatid'].'&text='.urlencode($message).'');
+		$message = 'WHMCS: '.$notification->getMessage().' '.$notification->getUrl()."\nClient: ".$postData['attributes'][1]['value'];
+		file_get_contents('https://api.telegram.org/bot'.$moduleSettings['token'].'/sendMessage?chat_id='.$notificationSettings['chatid'].'&text='.urlencode($message).'');
 		
-// 		file_get_contents('https://api.telegram.org/bot'.$moduleSettings['token'].'/sendMessage?chat_id='.$moduleSettings['chatid'].'&text='.urlencode($message2).'');
-// 		$message2 = json_encode($postData);
+		if($notificationSettings['debug']=='on') {
+			$message = json_encode($postData, JSON_PRETTY_PRINT);
+			$message .= json_encode($notificationSettings, JSON_PRETTY_PRINT);
+			file_get_contents('https://api.telegram.org/bot'.$moduleSettings['token'].'/sendMessage?chat_id='.$notificationSettings['chatid'].'&text='.urlencode($message).'');
+			
+		}
 		/** @var Template $email */
 	}
 }
