@@ -218,6 +218,7 @@ class telegram implements NotificationModuleInterface
 			'url' => $notification->getUrl(),
 			'attributes' => [],
 		];
+		$attributes_output='';
 		foreach ($notification->getAttributes() as $attribute) {
 			$postData['attributes'][] = [
 				'label' => $attribute->getLabel(),
@@ -226,9 +227,10 @@ class telegram implements NotificationModuleInterface
 				'style' => $attribute->getStyle(),
 				'icon' => $attribute->getIcon(),
 			];
+			$attributes_output .= $attribute->getLabel().": ".$attribute->getValue()." ".$attribute->getUrl()."\n";
 		}
 		
-		$message = 'WHMCS: '.$notification->getMessage().' '.$notification->getUrl()."\nClient: ".$postData['attributes'][1]['value'];
+		$message = 'WHMCS: '.$notification->getMessage().' '.$notification->getUrl()."\n".$attributes_output;
 		file_get_contents('https://api.telegram.org/bot'.$moduleSettings['token'].'/sendMessage?chat_id='.$notificationSettings['chatid'].'&text='.urlencode($message).'');
 		
 		if($notificationSettings['debug']=='on') {
