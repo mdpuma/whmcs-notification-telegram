@@ -182,6 +182,9 @@ class telegram implements NotificationModuleInterface
 			$result = json_decode($result, true);
 			$values = [];
 			foreach ($result['result'] as $update) {
+				if(!isset($update['message']['chat']['title'])) {
+					$update['message']['chat']['title'] = $update['message']['chat']['username'];
+				}
 				$values[] = ['id' => $update['message']['chat']['id'], 'name' => $update['message']['chat']['title'], 'description' => $update['message']['chat']['title']];
 			}
 			return [
