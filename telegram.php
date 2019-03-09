@@ -138,7 +138,7 @@ class telegram implements NotificationModuleInterface
 		return [
 			'chatid' => [
 				'FriendlyName' => 'Chat ID',
-				'Type' => 'dynamic',
+				'Type' => 'text',
 				'Description' => 'You may find chat id by opening following url: https://api.telegram.org/bot<TOKENID>/getUpdates?offset=-5',
 			],
 			'debug' => [
@@ -176,21 +176,18 @@ class telegram implements NotificationModuleInterface
 	 */
 	public function getDynamicField($fieldName, $settings)
 	{
-		if ($fieldName == 'chatid') {
-			// Open the file using the HTTP headers set above
-			$result = file_get_contents('https://api.telegram.org/bot'.$settings['token'].'/getUpdates?offset=-50');
-			$result = json_decode($result, true);
-			$values = [];
-			foreach ($result['result'] as $update) {
-				if(!isset($update['message']['chat']['title'])) {
-					$update['message']['chat']['title'] = $update['message']['chat']['username'];
-				}
-				$values[] = ['id' => $update['message']['chat']['id'], 'name' => $update['message']['chat']['title'], 'description' => $update['message']['chat']['title']];
-			}
-			return [
-				'values' => $values,
-			];
-		}
+// 		if ($fieldName == 'chatid') {
+// 			// Open the file using the HTTP headers set above
+// 			$result = file_get_contents('https://api.telegram.org/bot'.$settings['token'].'/getUpdates?offset=-50');
+// 			$result = json_decode($result, true);
+// 			$values = [];
+// 			foreach ($result['result'] as $update) {
+// 				$values[] = ['id' => $update['message']['chat']['id'], 'name' => $update['message']['chat']['title'], 'description' => $update['message']['chat']['title']];
+// 			}
+// 			return [
+// 				'values' => $values,
+// 			];
+// 		}
 		return [];
 	}
 
